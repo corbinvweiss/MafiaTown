@@ -1,0 +1,94 @@
+{
+    "ConnectMessage": 
+    {
+        "type": "ConnectMessage",
+        "name": "<username>"
+    },
+    "ConnectedMessage": 
+    {
+        "type": "ConnectedMessage",
+        "success": true
+    },
+    "NewPlayerJoined":
+    {
+        "type": "NewPlayerJoined",
+        "name": "<username>"
+    },
+    "PlayerRole":
+    {
+        "type": "PlayerRole",
+        "role": "doctor"
+    },
+    "OtherMafia":
+    {
+        "type": "OtherMafia",
+        "name": "<username>"
+    },
+    "CivilianMessage":
+    {
+        "type": "CivilianMessage",
+        "content": "red sus"
+    },
+    "MafiaMessage":
+    {
+        "type": "MafiaMessage",
+        "target": "<username>"
+    },
+    "DoctorMessage":
+    {
+        "type": "DoctorMessage",
+        "target": "<username>"
+    },
+    "SheriffMessage":
+    {
+        "type": "SheriffMessage",
+        "target": "<username>"
+    },
+    "VoteMessage":
+    {
+        "type": "VoteMessage",
+        "voter": "<username>",
+        "vote": "<username>"
+    },
+    "PlayerReady":
+    {
+        "type": "PlayerReady",
+        "player": "<username>"
+    },
+    "MafiaDecideKill":
+    {
+        "type": "MafiaDecideKill",
+        "target": "username"
+    },
+    "SheriffResponse":
+    {
+        "type": "SheriffResponse",
+        "mafia": true
+    },
+    "EndOfNight":
+    {
+        "killed": "<username>",
+        "healed": "<username>"
+    },
+    "YayOrNay": 
+    {
+        "type": "YayOrNay",
+        "voter": "<username>",
+        "kill": true
+    },
+    "EndOfDiscussion":
+    {
+        "type": "EndOfDiscussion",
+        "prosecuted": "<username>"
+    },
+    "EndVote":
+    {
+        "type": "EndVote",
+        "killed": true
+    },
+    "EndGame":
+    {
+        "type": "EndGame",
+        "winner": "civilian"
+    }
+}
