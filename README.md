@@ -1,0 +1,2 @@
+# MafiaTown
+LAN Mafia game
