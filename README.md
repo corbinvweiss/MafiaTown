@@ -24,3 +24,7 @@ int current Round;
 ```
 
 Look at `messages.json` for the types of messages
+
+## October 17
+### Goals:
+-  Get a chat server going that lets people join and broadcasts all messages to all users.
