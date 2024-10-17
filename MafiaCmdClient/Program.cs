@@ -3,6 +3,7 @@ using MafiaLib;
 
 namespace MafiaCmdClient;
 
+// This is the client's program
 class Program
 {
     private static string? Name { get; set; } = string.Empty;
