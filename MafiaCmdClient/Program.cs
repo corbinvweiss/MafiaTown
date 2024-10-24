@@ -27,7 +27,7 @@ class Program
         Console.WriteLine("Connected to server");
         Console.Write("Enter your message: ");
 
-        await Task.Run(() => GetInputNonBlocking());
+        await Task.Run(() => GetInputAsync());
 
         while (true) 
         {
@@ -47,28 +47,13 @@ class Program
         return input;
     }
 
-    private static void GetInputNonBlocking()
+    private static async void GetInputAsync()
     {
-        string tempMessage = string.Empty;
-        while (true) 
+        while(true)
         {
-            if (Console.KeyAvailable)
-            {
-                var key = Console.ReadKey(intercept: true);
-                if (key.Key == ConsoleKey.Enter) 
-                {
-                    Model!.CurrentMessage = tempMessage;
-                    Model!.Send();
-                    tempMessage = string.Empty;
-                    Console.Write($"{Environment.NewLine}Enter your message: ");
-                }
-                else
-                {
-                   tempMessage += key.Key;
-                   Console.Write(key.KeyChar);
-                }
-            }
-            Task.Delay(100);
+            string? input = await Task.Run(() => Console.ReadLine());
+            Model!.CurrentMessage = input;
+            Model!.Send();
         }
     }
 

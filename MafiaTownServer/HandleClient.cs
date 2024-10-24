@@ -42,11 +42,13 @@ internal class HandleClient
                 else 
                 {
                     Console.WriteLine($"{clientName} did not get a message because it was ill formed.");
+                    break;
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Unexpected Error: {ex.Message}");
+                break;
             }
         }
     }
