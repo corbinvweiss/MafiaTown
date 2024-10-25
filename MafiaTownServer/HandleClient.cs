@@ -30,6 +30,11 @@ internal class HandleClient
         {
             try
             {
+                foreach (var player in Program.PlayerList)
+                    if (clientName == player.Key && !player.Value.Alive)
+                    {
+                        return;
+                    }
                 ChatMessage? msg = clientSocket.ReadChatMessage();
                 if (msg != null)
                 {
@@ -37,7 +42,7 @@ internal class HandleClient
                     {
                         if(msg.Message[0] == '!') 
                         {
-                            Program.Send(msg);
+                            HandleCommand(msg);
                         }
                         else 
                         {
@@ -57,6 +62,15 @@ internal class HandleClient
                 Console.WriteLine($"Unexpected Error: {ex.Message}");
                 break;
             }
+        }
+    }
+
+    private static void HandleCommand(ChatMessage msg)
+    {
+        if (msg.Message[..5] == "!kill")
+        {
+            Program.KillPlayer(msg.Message[6..]);    
+            Console.WriteLine($"{msg.Sender} said: {msg.Message}");  
         }
     }
 }

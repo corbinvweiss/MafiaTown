@@ -85,4 +85,25 @@ public static class Program
             }
         }
     }
+
+    internal static void KillPlayer(string target)
+    {
+        foreach (var item in PlayerList)
+        {
+            if(item.Key == target)
+            {
+                try 
+                {
+                    ChatMessage msg = new ChatMessage("System", "You're dead!");
+                    item.Value.Client.WriteChatMessage(msg);
+                    item.Value.Alive = false;
+                }
+                catch
+                {
+                    Console.WriteLine($"Unable to write to user {item.Key}, removing user.");
+                    PlayerList.Remove(item.Key);
+                }
+            }
+        }
+    }
 }
