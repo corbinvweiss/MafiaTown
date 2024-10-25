@@ -35,8 +35,15 @@ internal class HandleClient
                 {
                     if(msg.Sender == clientName) 
                     {
-                        Program.Broadcast(msg);
-                        Console.WriteLine($"{clientName} said: {msg.Message}");
+                        if(msg.Message[0] == '!') 
+                        {
+                            Program.Send(msg);
+                        }
+                        else 
+                        {
+                            Program.Broadcast(msg);
+                            Console.WriteLine($"{clientName} said: {msg.Message}");
+                        }
                     }
                 }
                 else 
