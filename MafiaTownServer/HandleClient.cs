@@ -69,8 +69,13 @@ internal class HandleClient
     {
         if (msg.Message[..5] == "!kill")
         {
-            Program.KillPlayer(msg.Message[6..]);    
+            Program.KillPlayer(msg);    
             Console.WriteLine($"{msg.Sender} said: {msg.Message}");  
         }
+        // if (msg.Message[..5] == "!vote")
+        // {
+        //     Program.Vote(msg);
+        //     Console.WriteLine($"{msg.Sender} said: {msg.Message}");  
+        // }
     }
 }

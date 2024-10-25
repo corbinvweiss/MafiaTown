@@ -19,8 +19,13 @@ public class MainModel
     {
         get => _Username;
         set => SetField<string>(out _Username, value);
-
     }
+
+    public bool Alive = true;
+
+    public char Role = 'C';
+
+    public bool Voted = false;
 
     private string _MessageBoard = string.Empty;
     public string MessageBoard { 
@@ -59,18 +64,40 @@ public class MainModel
     {
         if (_socket != null)
         {
-            ChatMessage msg = new ChatMessage(_Username, _CurrentMessage);
-            _socket.WriteChatMessage(msg);
+                ChatMessage msg = new ChatMessage(_Username, _CurrentMessage);
+                _socket.WriteChatMessage(msg);
         }
+    }
+
+    public bool CanChat() 
+    {
+        if(!this.Alive)     // check for talking while dead
+        {
+            MessageBoard += $"You can't talk when you're dead.{Environment.NewLine}";
+            return false;
+        }
+        if(_CurrentMessage[..5] == "!vote" && Voted)    // check for multiple voting
+        {
+            MessageBoard += $"You alread voted.{Environment.NewLine}";
+            return false;
+        }
+        return true;
     }
 
     public void GetMessage()
     {
         while (_socket != null) {
             ChatMessage? msg = _socket.ReadChatMessage();
+            // put in logic for effect of message. e.g. !kill -> this._Alive = false
             if (msg!=null)
             {
-                MessageBoard += $"{msg.Sender} said: {msg.Message} {Environment.NewLine}";
+                if(msg.Message.Length >= 5 && msg.Message[..5] == "!kill") {
+                    this.Alive = false;
+                    MessageBoard += $"{msg.Sender} just killed you! {Environment.NewLine}";
+                }
+                else {
+                    MessageBoard += $"{msg.Sender} said: {msg.Message} {Environment.NewLine}";
+                }
             }
         }
     }

@@ -12,6 +12,7 @@ public class Player
     public string Role = String.Empty;
     public bool Voted = false;
     public bool Alive = true;
+    public int VotesAgainst = 0;
 
     public Player(TcpClient tcpClient, string role)
     {
@@ -86,17 +87,44 @@ public static class Program
         }
     }
 
-    internal static void KillPlayer(string target)
+    internal static void Vote(ChatMessage msg)  // track vote of msg.Sender for msg.Message
     {
         foreach (var item in PlayerList)
         {
-            if(item.Key == target)
+            if(item.Key == msg.Message[6..])
+            {
+                item.Value.VotesAgainst++;  // update the votecount
+            }
+            if(item.Key == msg.Sender)
+            {
+                item.Value.Voted = true;    // update who has voted
+            }
+        }
+    }
+
+    internal static void KillPlayer(ChatMessage msg)
+    {
+        foreach (var item in PlayerList)
+        {
+            if(item.Key == msg.Message[6..])
             {
                 try 
                 {
-                    ChatMessage msg = new ChatMessage("System", "You're dead!");
                     item.Value.Client.WriteChatMessage(msg);
                     item.Value.Alive = false;
+                }
+                catch
+                {
+                    Console.WriteLine($"Unable to write to user {item.Key}, removing user.");
+                    PlayerList.Remove(item.Key);
+                }
+            }
+            if(item.Key == msg.Sender)  // notify the killer they have killed the target
+            {
+                try
+                {
+                    ChatMessage notify = new ChatMessage("System", $"You have killed {msg.Message[6..]}");
+                    item.Value.Client.WriteChatMessage(notify);
                 }
                 catch
                 {
