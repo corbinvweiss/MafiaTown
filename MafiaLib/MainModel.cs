@@ -64,8 +64,10 @@ public class MainModel
     {
         if (_socket != null)
         {
+            if(CanChat()) {
                 ChatMessage msg = new ChatMessage(_Username, _CurrentMessage);
                 _socket.WriteChatMessage(msg);
+            }
         }
     }
 
@@ -76,10 +78,18 @@ public class MainModel
             MessageBoard += $"You can't talk when you're dead.{Environment.NewLine}";
             return false;
         }
-        if(_CurrentMessage[..5] == "!vote" && Voted)    // check for multiple voting
+        if(_CurrentMessage.Length >= 5 && _CurrentMessage[..5] == "!vote")    // check for multiple voting
         {
-            MessageBoard += $"You alread voted.{Environment.NewLine}";
-            return false;
+            if(Voted)
+            {
+                MessageBoard += $"You alread voted.{Environment.NewLine}";
+                return false;
+            }
+            else 
+            {
+                Voted = true;
+                return true;
+            }
         }
         return true;
     }
@@ -94,6 +104,10 @@ public class MainModel
                 if(msg.Message.Length >= 5 && msg.Message[..5] == "!kill") {
                     this.Alive = false;
                     MessageBoard += $"{msg.Sender} just killed you! {Environment.NewLine}";
+                }
+                if(msg.Message.Length >= 6 && msg.Message[..6] == "!evict") {
+                    this.Alive = false;
+                    MessageBoard += $"You have been voted out. {Environment.NewLine}";
                 }
                 else {
                     MessageBoard += $"{msg.Sender} said: {msg.Message} {Environment.NewLine}";

@@ -53,7 +53,10 @@ class Program
         {
             string? input = await Task.Run(() => Console.ReadLine());
             Model!.CurrentMessage = input;
-            Model!.Send();
+            if(!string.IsNullOrWhiteSpace(input))
+            {
+                Model!.Send();
+            }
         }
     }
 

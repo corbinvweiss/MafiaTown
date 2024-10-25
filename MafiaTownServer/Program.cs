@@ -53,18 +53,23 @@ public static class Program
         }
     }
 
-    public static void Broadcast(ChatMessage msg)
+    public static void SendTo(string username, TcpClient client, ChatMessage msg)
     {
-        foreach (var item in PlayerList)
         try 
         {
-            item.Value.Client.WriteChatMessage(msg);
+            client.WriteChatMessage(msg);
         }
         catch
         {
-            Console.WriteLine($"Unable to write to user {item.Key}, removing user.");
-            PlayerList.Remove(item.Key);
+            Console.WriteLine($"Unable to write to user {username}, removing user.");
+            PlayerList.Remove(username);
         }
+    }
+
+    public static void Broadcast(ChatMessage msg)
+    {
+        foreach (var item in PlayerList)
+        SendTo(item.Key, item.Value.Client, msg);
     }
 
     // Send the message to a particular person
@@ -74,15 +79,7 @@ public static class Program
         {
             if(item.Key == msg.Sender) 
             {
-                try 
-                {
-                    item.Value.Client.WriteChatMessage(msg);
-                }
-                catch
-                {
-                    Console.WriteLine($"Unable to write to user {item.Key}, removing user.");
-                    PlayerList.Remove(item.Key);
-                }
+                SendTo(item.Key, item.Value.Client, msg);
             }
         }
     }
@@ -98,6 +95,38 @@ public static class Program
             if(item.Key == msg.Sender)
             {
                 item.Value.Voted = true;    // update who has voted
+                ChatMessage notify = new ChatMessage("System", $"You have voted for {msg.Message[6..]}");
+                SendTo(item.Key, item.Value.Client, notify);
+            }
+        }
+        TallyVote();
+    }
+
+    internal static void TallyVote() 
+    {
+        KeyValuePair<string, Player> mostVoted = PlayerList.First();
+        foreach (var item in PlayerList)
+        {
+            if(!item.Value.Voted)   // if anylne has not voted, stop tallying votes.
+            {
+                return;
+            }
+            if(item.Value.VotesAgainst > mostVoted.Value.VotesAgainst) 
+            {
+                mostVoted = item;
+            }
+        }
+        // kick out the player.
+        mostVoted.Value.Alive = false;
+        SendTo(mostVoted.Key, mostVoted.Value.Client, new ChatMessage("System", "!evict"));
+
+        // notify the other players.
+        ChatMessage notify = new ChatMessage("System", $"{mostVoted.Key} has been voted out.");
+        foreach (var item in PlayerList)
+        {
+            if(item.Key != mostVoted.Key) 
+            {
+                SendTo(item.Key, item.Value.Client, notify);
             }
         }
     }
@@ -108,29 +137,13 @@ public static class Program
         {
             if(item.Key == msg.Message[6..])
             {
-                try 
-                {
-                    item.Value.Client.WriteChatMessage(msg);
-                    item.Value.Alive = false;
-                }
-                catch
-                {
-                    Console.WriteLine($"Unable to write to user {item.Key}, removing user.");
-                    PlayerList.Remove(item.Key);
-                }
+                item.Value.Alive = false;
+                SendTo(item.Key, item.Value.Client, msg);
             }
             if(item.Key == msg.Sender)  // notify the killer they have killed the target
             {
-                try
-                {
-                    ChatMessage notify = new ChatMessage("System", $"You have killed {msg.Message[6..]}");
-                    item.Value.Client.WriteChatMessage(notify);
-                }
-                catch
-                {
-                    Console.WriteLine($"Unable to write to user {item.Key}, removing user.");
-                    PlayerList.Remove(item.Key);
-                }
+                ChatMessage notify = new ChatMessage("System", $"You have killed {msg.Message[6..]}");
+                SendTo(item.Key, item.Value.Client, notify);
             }
         }
     }
