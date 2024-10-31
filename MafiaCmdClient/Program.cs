@@ -65,15 +65,6 @@ class Program
         // TODO: update client based on global state here
         if (sender is MainModel model)
         {
-            if (e.PropertyName == "State")
-            {
-                Console.WriteLine("STATE HAS CHANGED.");
-            }
-            if (e.PropertyName == "State" && model.State == "CHAT")
-            {
-                Console.WriteLine("Voting has ended.");
-                model.Voted = false;
-            }
             if (e.PropertyName == "MessageBoard" && !string.IsNullOrEmpty(model.MessageBoard))
             {
                 Console.Clear();

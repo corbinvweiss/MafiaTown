@@ -2,10 +2,18 @@
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using MafiaLib;
 
 namespace MafiaTownServer;
+
+
+public enum States
+{
+    VOTING,
+    CHAT
+}
 
 public class Player
 {
@@ -26,6 +34,7 @@ public class Player
 public static class Program
 {
     public static Dictionary<string, Player> PlayerList = new Dictionary<string, Player>();
+    public static States State = States.CHAT;
 
     public static void Main()
     {
@@ -87,7 +96,6 @@ public static class Program
 
     internal static void Vote(ChatMessage msg)  // track vote of msg.Sender for msg.Message
     {
-        Broadcast(new ChatMessage("System", "State=VOTING"));
         KeyValuePair<string, Player> target = PlayerList.First();
         KeyValuePair<string, Player> sender = PlayerList.First();
         bool foundPlayer = false;
@@ -103,14 +111,15 @@ public static class Program
                 sender = item;
             }
         }
-        // if(sender.Value.Voted) 
-        // {
-        //     SendTo(sender.Key, sender.Value.Client, new ChatMessage("System", "You already voted this round."));
-        // }
+        if(sender.Value.Voted) 
+        {
+            SendTo(sender.Key, sender.Value.Client, new ChatMessage("System", "You already voted this round."));
+        }
         if(foundPlayer)
         {
             if(target.Value.Alive) // if the player voted for exists and is alive, tally their votes
             {
+                State = States.VOTING;
                 target.Value.VotesAgainst++;
                 sender.Value.Voted = true;
                 ChatMessage notify = new ChatMessage("System", $"You have voted for {msg.Message[6..]}.");
@@ -158,7 +167,7 @@ public static class Program
         {
             // kick out the player.
             mostVoted.Value.Alive = false;
-            SendTo(mostVoted.Key, mostVoted.Value.Client, new ChatMessage("System", "!evict"));
+            SendTo(mostVoted.Key, mostVoted.Value.Client, new ChatMessage("System", "You have been voted out."));
 
             // notify the other players.
             ChatMessage notify = new ChatMessage("System", $"{mostVoted.Key} has been voted out.");
@@ -170,7 +179,15 @@ public static class Program
                 }
             }
         }
-        Broadcast(new ChatMessage("System", "State=CHAT"));
+        ResetVotes();
+    }
+
+    internal static void ResetVotes() 
+    {
+        foreach (var item in PlayerList)
+        {
+            item.Value.Voted = false;
+        }
     }
 
     internal static void KillPlayer(ChatMessage msg)
@@ -188,7 +205,6 @@ public static class Program
                 sender = item;
             }
         }
-
         ChatMessage notify = new ChatMessage("System", $"You have killed {target.Key}.");
         if(!target.Value.Alive) 
         {
@@ -199,7 +215,7 @@ public static class Program
         }
         if(target.Value.Alive)  // Execute the player if they're not already dead
         {
-            SendTo(target.Key, target.Value.Client, msg);
+            SendTo(target.Key, target.Value.Client, new ChatMessage("System", $"You have been killed."));
             target.Value.Alive = false;
         }
     }

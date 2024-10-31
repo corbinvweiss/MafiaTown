@@ -30,14 +30,14 @@ internal class HandleClient
         {
             try
             {
-                foreach (var player in Program.PlayerList)
-                    if (clientName == player.Key && !player.Value.Alive)
-                    {
-                        return;
-                    }
                 ChatMessage? msg = clientSocket.ReadChatMessage();
                 if (msg != null)
                 {
+                    if(!Program.PlayerList[msg.Sender].Alive) // check whether the player is alive
+                    {
+                        Program.SendTo(msg.Sender, Program.PlayerList[msg.Sender].Client, new ChatMessage("System", "You can't talk when you're dead."));
+                        continue;
+                    }
                     if(msg.Sender == clientName) 
                     {
                         if(msg.Message[0] == '!') 
