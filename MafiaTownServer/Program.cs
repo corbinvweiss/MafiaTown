@@ -9,7 +9,14 @@ using MafiaLib;
 
 namespace MafiaTownServer;
 
-
+public enum State
+{
+    START,
+    NIGHT,
+    NOMINATE,
+    VOTE,
+    END
+}
 
 public class Player
 {
@@ -30,6 +37,7 @@ public class Player
 public static class Program
 {
     public static Dictionary<string, Player> PlayerList = new Dictionary<string, Player>();
+    public static State CurrentState = State.START;
 
     public static void Main()
     {
@@ -87,6 +95,19 @@ public static class Program
                 SendTo(item.Key, item.Value.Client, msg);
             }
         }
+    }
+
+    internal static void AssignRoles()
+    {
+        List<string> RoleList = ["C", "C", "C", "C", "M", "M", "D", "S"]; //TODO: Make roles random
+        for (int i = 0; i < PlayerList.Count; i++) {
+            PlayerList.ElementAt(i).Value.Role = RoleList[i];
+        }
+    }
+
+    internal static void Night()
+    {
+        
     }
 
     internal static void Vote(ChatMessage msg)  // track vote of msg.Sender for msg.Message
@@ -223,4 +244,6 @@ public static class Program
             target.Value.Alive = false;
         }
     }
+
+
 }

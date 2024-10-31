@@ -42,7 +42,7 @@ internal class HandleClient
                     {
                         if(msg.Message[0] == '!') 
                         {
-                            HandleCommand(msg);
+                            HandleCommand(msg, Program.PlayerList[msg.Sender].Role);
                         }
                         else 
                         {
@@ -65,17 +65,26 @@ internal class HandleClient
         }
     }
 
-    private static void HandleCommand(ChatMessage msg)
+    private static void HandleCommand(ChatMessage msg, string role)
     {
-        if (msg.Message.Length >= 5 && msg.Message[..5] == "!kill")
+        if (msg.Message.Length >= 5 && msg.Message[..5] == "!kill" && role == "M" && Program.CurrentState == State.NIGHT)
         {
             Program.KillPlayer(msg);    
             Console.WriteLine($"{msg.Sender} said: {msg.Message}");  
         }
-        if (msg.Message.Length >= 5 && msg.Message[..5] == "!vote")
+        else
+        {
+            Console.WriteLine("You can't do that right now.");
+        }
+
+        if (msg.Message.Length >= 5 && msg.Message[..5] == "!vote" && Program.CurrentState == State.NIGHT)
         {
             Program.Vote(msg);
             Console.WriteLine($"{msg.Sender} said: {msg.Message}");  
+        }
+        else
+        {
+            Console.WriteLine("You can't do that right now.");
         }
     }
 }
