@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
@@ -86,28 +87,54 @@ public static class Program
 
     internal static void Vote(ChatMessage msg)  // track vote of msg.Sender for msg.Message
     {
+        Broadcast(new ChatMessage("System", "State=VOTING"));
+        KeyValuePair<string, Player> target = PlayerList.First();
+        KeyValuePair<string, Player> sender = PlayerList.First();
+        bool foundPlayer = false;
         foreach (var item in PlayerList)
         {
             if(item.Key == msg.Message[6..])
             {
-                item.Value.VotesAgainst++;  // update the votecount
+                target = item;
+                foundPlayer = true;
             }
             if(item.Key == msg.Sender)
             {
-                item.Value.Voted = true;    // update who has voted
-                ChatMessage notify = new ChatMessage("System", $"You have voted for {msg.Message[6..]}");
-                SendTo(item.Key, item.Value.Client, notify);
+                sender = item;
             }
         }
-        TallyVote();
+        // if(sender.Value.Voted) 
+        // {
+        //     SendTo(sender.Key, sender.Value.Client, new ChatMessage("System", "You already voted this round."));
+        // }
+        if(foundPlayer)
+        {
+            if(target.Value.Alive) // if the player voted for exists and is alive, tally their votes
+            {
+                target.Value.VotesAgainst++;
+                sender.Value.Voted = true;
+                ChatMessage notify = new ChatMessage("System", $"You have voted for {msg.Message[6..]}.");
+                SendTo(sender.Key, sender.Value.Client, notify);
+                TallyVote();
+            }
+            else    // if the player voted for exists and is dead, notify the voter.
+            {
+                SendTo(sender.Key, sender.Value.Client, new ChatMessage("System", $"{msg.Message[6..]} is dead."));
+            }
+        }
+        else    // if the player voted for does not exist notify teh voter.
+        {
+            SendTo(sender.Key, sender.Value.Client, new ChatMessage("System", $"No such player {msg.Message[6..]}."));
+        }
     }
 
     internal static void TallyVote() 
     {
         KeyValuePair<string, Player> mostVoted = PlayerList.First();
-        foreach (var item in PlayerList)
+        bool tie = false;
+        foreach (var item in PlayerList)    // find the most voted for player
         {
-            if(!item.Value.Voted)   // if anylne has not voted, stop tallying votes.
+            if(item.Value.Alive && !item.Value.Voted)   // if anyone alive has not voted, stop tallying votes.
             {
                 return;
             }
@@ -116,35 +143,64 @@ public static class Program
                 mostVoted = item;
             }
         }
-        // kick out the player.
-        mostVoted.Value.Alive = false;
-        SendTo(mostVoted.Key, mostVoted.Value.Client, new ChatMessage("System", "!evict"));
-
-        // notify the other players.
-        ChatMessage notify = new ChatMessage("System", $"{mostVoted.Key} has been voted out.");
-        foreach (var item in PlayerList)
+        foreach (var item in PlayerList)    // find the second most voted for player
         {
-            if(item.Key != mostVoted.Key) 
+            if(item.Key != mostVoted.Key && item.Value.VotesAgainst == mostVoted.Value.VotesAgainst) 
             {
-                SendTo(item.Key, item.Value.Client, notify);
+                tie = true;
             }
         }
+        if(tie)
+        {
+            Broadcast(new ChatMessage("System", "The vote ended in a tie."));
+        }
+        else
+        {
+            // kick out the player.
+            mostVoted.Value.Alive = false;
+            SendTo(mostVoted.Key, mostVoted.Value.Client, new ChatMessage("System", "!evict"));
+
+            // notify the other players.
+            ChatMessage notify = new ChatMessage("System", $"{mostVoted.Key} has been voted out.");
+            foreach (var item in PlayerList)
+            {
+                if(item.Key != mostVoted.Key) 
+                {
+                    SendTo(item.Key, item.Value.Client, notify);
+                }
+            }
+        }
+        Broadcast(new ChatMessage("System", "State=CHAT"));
     }
 
     internal static void KillPlayer(ChatMessage msg)
     {
-        foreach (var item in PlayerList)
+        KeyValuePair<string, Player> target = PlayerList.First();
+        KeyValuePair<string, Player> sender = PlayerList.First();
+        foreach (var item in PlayerList) // find the sender and the target in the playerlist
         {
             if(item.Key == msg.Message[6..])
             {
-                item.Value.Alive = false;
-                SendTo(item.Key, item.Value.Client, msg);
+                target = item;
             }
-            if(item.Key == msg.Sender)  // notify the killer they have killed the target
+            if(item.Key == msg.Sender)
             {
-                ChatMessage notify = new ChatMessage("System", $"You have killed {msg.Message[6..]}");
-                SendTo(item.Key, item.Value.Client, notify);
+                sender = item;
             }
+        }
+
+        ChatMessage notify = new ChatMessage("System", $"You have killed {target.Key}.");
+        if(!target.Value.Alive) 
+        {
+            notify = new ChatMessage("System", $"{target.Key} is already dead.");
+        }
+        if(target.Key != sender.Key){   // if it is not a self-kill, then notify the sender
+            SendTo(sender.Key, sender.Value.Client, notify);
+        }
+        if(target.Value.Alive)  // Execute the player if they're not already dead
+        {
+            SendTo(target.Key, target.Value.Client, msg);
+            target.Value.Alive = false;
         }
     }
 }

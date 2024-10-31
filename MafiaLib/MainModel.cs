@@ -27,6 +27,12 @@ public class MainModel
 
     public bool Voted = false;
 
+    private string _State = string.Empty; // track the global state
+    public string State {
+        get => _State;
+        set => SetField<string>(out _State, value);
+    }
+
     private string _MessageBoard = string.Empty;
     public string MessageBoard { 
         get => _MessageBoard;
@@ -82,7 +88,7 @@ public class MainModel
         {
             if(Voted)
             {
-                MessageBoard += $"You alread voted.{Environment.NewLine}";
+                MessageBoard += $"You already voted.{Environment.NewLine}";
                 return false;
             }
             else 
@@ -102,18 +108,34 @@ public class MainModel
             if (msg!=null)
             {
                 if(msg.Message.Length >= 5 && msg.Message[..5] == "!kill") {
-                    this.Alive = false;
+                    Alive = false;
                     MessageBoard += $"{msg.Sender} just killed you! {Environment.NewLine}";
                 }
-                if(msg.Message.Length >= 6 && msg.Message[..6] == "!evict") {
-                    this.Alive = false;
+                // provide a handle for the server to update the state of the client
+                if(msg.Sender == "System" && msg.Message.Length >= 6 && msg.Message[..6] == "State=") {
+                    UpdateState(msg.Message[6..]);
+                    MessageBoard += $"Updating state to {this.State} {Environment.NewLine}";
+                    continue;
+                }
+                if(msg.Sender == "System" && msg.Message.Length >= 6 && msg.Message[..6] == "!evict") {
+                    Alive = false;
                     MessageBoard += $"You have been voted out. {Environment.NewLine}";
+                    continue;
                 }
                 else {
                     MessageBoard += $"{msg.Sender} said: {msg.Message} {Environment.NewLine}";
                 }
             }
         }
+    }
+
+    // Update the state of the client in response to the server's message
+    private void UpdateState(string newState) {
+        if(State == "VOTING" && newState == "CHAT")
+        {
+            Voted = false;  // at the end of a vote round, reset the client's vote
+        }
+        State = newState;
     }
 
     #endregion
