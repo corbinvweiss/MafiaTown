@@ -4,16 +4,12 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
+using System.Windows.Markup;
 using MafiaLib;
 
 namespace MafiaTownServer;
 
 
-public enum States
-{
-    VOTING,
-    CHAT
-}
 
 public class Player
 {
@@ -34,7 +30,6 @@ public class Player
 public static class Program
 {
     public static Dictionary<string, Player> PlayerList = new Dictionary<string, Player>();
-    public static States State = States.CHAT;
 
     public static void Main()
     {
@@ -119,12 +114,11 @@ public static class Program
         {
             if(target.Value.Alive) // if the player voted for exists and is alive, tally their votes
             {
-                State = States.VOTING;
                 target.Value.VotesAgainst++;
                 sender.Value.Voted = true;
                 ChatMessage notify = new ChatMessage("System", $"You have voted for {msg.Message[6..]}.");
                 SendTo(sender.Key, sender.Value.Client, notify);
-                TallyVote();
+                if(AllVoted()) TallyVote();
             }
             else    // if the player voted for exists and is dead, notify the voter.
             {
@@ -137,22 +131,32 @@ public static class Program
         }
     }
 
+    internal static bool AllVoted() // check if all alive players have voted
+    {
+        bool allVoted = true;
+        foreach (var item in PlayerList)
+        {
+            if(item.Value.Alive && !item.Value.Voted)
+            {
+                allVoted = false;
+                break;
+            }
+        }
+        return allVoted;
+    }
+
     internal static void TallyVote() 
     {
         KeyValuePair<string, Player> mostVoted = PlayerList.First();
         bool tie = false;
         foreach (var item in PlayerList)    // find the most voted for player
         {
-            if(item.Value.Alive && !item.Value.Voted)   // if anyone alive has not voted, stop tallying votes.
-            {
-                return;
-            }
             if(item.Value.VotesAgainst > mostVoted.Value.VotesAgainst) 
             {
                 mostVoted = item;
             }
         }
-        foreach (var item in PlayerList)    // find the second most voted for player
+        foreach (var item in PlayerList)    // Check for 
         {
             if(item.Key != mostVoted.Key && item.Value.VotesAgainst == mostVoted.Value.VotesAgainst) 
             {

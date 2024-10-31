@@ -51,8 +51,9 @@ class Program
     {
         while(true)
         {
-            string? input = await Task.Run(() => Console.ReadLine());
-            Model!.CurrentMessage = input;
+            string? input = string.Empty;
+            input = await Task.Run(() => Console.ReadLine());
+            Model!.CurrentMessage = string.IsNullOrWhiteSpace(input) ? string.Empty : input;
             if(!string.IsNullOrWhiteSpace(input))
             {
                 Model!.Send();
