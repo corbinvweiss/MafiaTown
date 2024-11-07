@@ -1,4 +1,5 @@
 using System;
+using System.Net.Security;
 using System.Net.Sockets;
 using MafiaLib;
 
@@ -8,14 +9,41 @@ internal class HandleClient
 {
     private TcpClient clientSocket;
     private string clientName;
-    public HandleClient(TcpClient socket, string name) 
+    private readonly Player player;
+    private GameState GameState;
+    public HandleClient(Player assignedPlayer, GameState gameState) 
     {
-        if (socket is null || string.IsNullOrWhiteSpace(name))
+        if (assignedPlayer.Client is null || string.IsNullOrWhiteSpace(assignedPlayer.Name))
         {
             throw new ArgumentNullException("socket and string must not be null or empty.");
         }
-        clientSocket = socket;
-        clientName = name;
+        player = assignedPlayer;
+        clientSocket = assignedPlayer.Client;
+        clientName = assignedPlayer.Name;
+        // subscribe to GameState update events
+        gameState.PhaseChanged += OnPhaseChanged;
+        gameState.PlayerAdded += OnPlayerAdded;
+        player.PlayerStateChanged += OnPlayerStateChanged;
+    }
+
+    private void OnPhaseChanged(Phase newPhase)
+    {
+        Console.WriteLine($"Player {clientName} notified of phase change: {newPhase}.");
+        if(newPhase == Phase.NIGHT)
+        {
+            Program.Broadcast(new ChatMessage("System", "Night has fallen."));
+            DoChat();
+        }
+    }
+
+    private void OnPlayerAdded(Player player)
+    {
+        Console.WriteLine($"Player {clientName} notified of {player.Name} added.");
+    }
+
+    private void OnPlayerStateChanged(Player player, string propertyName)
+    {
+        Console.WriteLine($"Player {player.Name}'s {propertyName} has changed.");
     }
 
     public void StartClient()
@@ -24,9 +52,14 @@ internal class HandleClient
         thread.Start();
     }
 
+    private void Play()
+    {
+        Program.Broadcast(new ChatMessage("System", "Starting the game!"));
+    }
+
     private void DoChat() 
     {
-        while (true)
+        while(true)
         {
             try
             {
@@ -35,6 +68,10 @@ internal class HandleClient
                 {
                     if(msg.Sender == clientName) 
                     {
+                        if(msg.Message == "done")
+                        {
+                            Program.Done(msg.Sender);
+                        }
                         Program.Broadcast(msg);
                         Console.WriteLine($"{clientName} said: {msg.Message}");
                     }
@@ -42,13 +79,11 @@ internal class HandleClient
                 else 
                 {
                     Console.WriteLine($"{clientName} did not get a message because it was ill formed.");
-                    break;
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Unexpected Error: {ex.Message}");
-                break;
             }
         }
     }
