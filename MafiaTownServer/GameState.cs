@@ -45,7 +45,7 @@ public class ThreadSafeProperty<T>(T initialValue)
     }
 }
 
-public class Player(string name, TcpClient client)
+public class Player
 {
     // Event triggered whenever the player state changes
     public event Action<Player, string>? PlayerStateChanged;
@@ -53,8 +53,8 @@ public class Player(string name, TcpClient client)
     {
         PlayerStateChanged?.Invoke(this, propertyName);
     }
-    public string Name {get; } = name;
-    public TcpClient Client{get; } = client;
+    public string Name {get; }
+    public TcpClient Client{get; }
     public ThreadSafeProperty<bool> Alive {get; private set; }
     public ThreadSafeProperty<bool> Voted {get; private set; }      // has this player voted this round?
     public ThreadSafeProperty<int> VotesAgainst {get; private set; }
@@ -62,6 +62,19 @@ public class Player(string name, TcpClient client)
     public ThreadSafeProperty<bool> Healed {get; private set; }     // has the doctor healed this player?
     public ThreadSafeProperty<Role> Role {get; private set; }
     public ThreadSafeProperty<bool> Done {get; private set; }  // indicates whether this player has done their action this round
+
+    public Player(string name, TcpClient client)
+    {
+        Name = name;
+        Client = client;
+        Alive = new ThreadSafeProperty<bool>(true);
+        Voted = new ThreadSafeProperty<bool>(false);
+        VotesAgainst = new ThreadSafeProperty<int>(0);
+        Targeted = new ThreadSafeProperty<bool>(false);
+        Healed = new ThreadSafeProperty<bool>(false);
+        Done = new ThreadSafeProperty<bool>(false);
+        Role = new ThreadSafeProperty<Role>(MafiaTownServer.Role.CIVILIAN);
+    }
 
     public void Kill()
     {
@@ -95,7 +108,7 @@ public class Player(string name, TcpClient client)
     public void FinishPhase()
     {
         Done.Value = true;
-        OnPlayerStateChanged(nameof(Done));
+        OnPlayerStateChanged("Done");
     }
 
     public void SetRole(Role role)
