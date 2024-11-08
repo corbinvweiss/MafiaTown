@@ -16,14 +16,15 @@ public static class Program
         Console.WriteLine("Mafia server has started.");
         while (true)
         {
+            Role nextRole = GetNextRole();
             try
             {
                 var clientSocket = ServerSocket.AcceptTcpClient();
                 ChatMessage? joinMessage = clientSocket.ReadChatMessage();
                 if (joinMessage != null) 
                 {
-                    // add the player to the GameState
-                    Player player = new(joinMessage.Sender, clientSocket);
+                    // add the player to the GameState, assigning a role as they come in.
+                    Player player = new(joinMessage.Sender, clientSocket, nextRole);
                     GameState.AddPlayer(player);
                     // add the client handle to the server.
                     var client = new HandleClient(player, GameState);
@@ -38,24 +39,22 @@ public static class Program
         }
     }
 
-
-    public static void AssignRoles() 
+    public static Role GetNextRole()
     {
-        Role[] roles = [Role.CIVILIAN, Role.DOCTOR, Role.MAFIA, Role.CIVILIAN];
-        int i = 0;
-        foreach (var player in GameState.PlayerList) 
+        // give the first player Mafia, the second doctor, the third sheriff, and all the rest civilian
+        Role[] roles = [Role.MAFIA, Role.DOCTOR, Role.SHERIFF, Role.CIVILIAN];
+        if(GameState.PlayerList.Count < 4) 
         {
-            player.SetRole(roles[i]);
-            SendTo(player.Client, new ChatMessage("System", $"You have been assigned the role {roles[i]}."));
-            i++;
+            return roles[GameState.PlayerList.Count];
+        }
+        else
+        {
+            return Role.CIVILIAN;
         }
     }
 
     public static void Done(string username) // cause username to finish their actions in this phase
     {
-        Console.WriteLine("In Program.Done");
-        Console.WriteLine(GameState.PlayerList);
-        Console.WriteLine(GameState.PlayerList.Count);
         for(int i=0; i<GameState.PlayerList.Count; i++)
         {
             if(GameState.PlayerList[i].Name == username)

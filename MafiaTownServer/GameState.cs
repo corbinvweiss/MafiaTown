@@ -6,6 +6,7 @@ namespace MafiaTownServer;
 
 public enum Phase // track the phase of the game
 { 
+    PREGAME,
     START,
     NIGHT,
     NOMINATE,
@@ -55,25 +56,25 @@ public class Player
     }
     public string Name {get; }
     public TcpClient Client{get; }
+    public Role Role {get; }
     public ThreadSafeProperty<bool> Alive {get; private set; }
     public ThreadSafeProperty<bool> Voted {get; private set; }      // has this player voted this round?
     public ThreadSafeProperty<int> VotesAgainst {get; private set; }
     public ThreadSafeProperty<bool> Targeted {get; private set; }   // has the mafia targeted this player?
     public ThreadSafeProperty<bool> Healed {get; private set; }     // has the doctor healed this player?
-    public ThreadSafeProperty<Role> Role {get; private set; }
     public ThreadSafeProperty<bool> Done {get; private set; }  // indicates whether this player has done their action this round
 
-    public Player(string name, TcpClient client)
+    public Player(string name, TcpClient client, Role role)
     {
         Name = name;
         Client = client;
+        Role = role;
         Alive = new ThreadSafeProperty<bool>(true);
         Voted = new ThreadSafeProperty<bool>(false);
         VotesAgainst = new ThreadSafeProperty<int>(0);
         Targeted = new ThreadSafeProperty<bool>(false);
         Healed = new ThreadSafeProperty<bool>(false);
         Done = new ThreadSafeProperty<bool>(false);
-        Role = new ThreadSafeProperty<Role>(MafiaTownServer.Role.CIVILIAN);
     }
 
     public void Kill()
@@ -109,12 +110,6 @@ public class Player
     {
         Done.Value = true;
         OnPlayerStateChanged("Done");
-    }
-
-    public void SetRole(Role role)
-    {
-        Role.Value = role;
-        OnPlayerStateChanged(nameof(Role));
     }
 }
 
@@ -182,7 +177,7 @@ public class GameState  // global synchronized state of the game.
 
     #region Game Phase
     public event Action<Phase>? PhaseChanged;    // when the phase changes, trigger an event
-    private Phase currentPhase = Phase.START;
+    private Phase currentPhase = Phase.PREGAME;
 
     public Phase CurrentPhase
     {
@@ -217,7 +212,6 @@ public class GameState  // global synchronized state of the game.
         // when you hear a player is done with their action for this phase,
         // check if all players are done. If they are, then send an UpdatePhase
         // event to the server Program.
-        Console.WriteLine("in GameState.OnPlayerStateChanged");
         if(propertyName == "Done" && player.Done.Value)
         {
             bool allDone = true;
@@ -237,7 +231,11 @@ public class GameState  // global synchronized state of the game.
     private void NextPhase()
     {
         Console.WriteLine("Moving to the next phase");
-        if(CurrentPhase == Phase.START)
+        if(CurrentPhase == Phase.PREGAME)
+        {
+            CurrentPhase = Phase.START;
+        }
+        else if(CurrentPhase == Phase.START)
         {
             CurrentPhase = Phase.NIGHT;
         }
