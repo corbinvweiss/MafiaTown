@@ -24,39 +24,53 @@ internal class HandleClient
         clientSocket = assignedPlayer.Client;
         clientName = assignedPlayer.Name;
         // subscribe to GameState update events
-        gameState.PhaseChanged += OnPhaseChanged;
-        gameState.PlayerAdded += OnPlayerAdded;
+        GameState = gameState;
+        GameState.PhaseChanged += OnPhaseChanged;
         player.PlayerStateChanged += OnPlayerStateChanged;
     }
 
-    private void OnPhaseChanged(Phase newPhase)
+    private void OnPlayerStateChanged(object? sender, PlayerChangedEventArgs e)
     {
-        Console.WriteLine($"Player {clientName} notified of phase change: {newPhase}.");
-        if(newPhase == Phase.NIGHT)
+        Console.WriteLine($"Player {e.player.Name}'s {e.PropertyName} has changed.");
+    }
+
+    public void OnPhaseChanged(object? sender, PhaseChangedEventArgs e)
+    {
+        Console.WriteLine($"Player {clientName} notified of phase change: {e.NewPhase}.");
+        if(e.NewPhase == Phase.NIGHT)
         {
             Night();
         }
-    }
-
-    private void OnPlayerAdded(Player player)
-    {
-        Console.WriteLine($"Player {clientName} notified of {player.Name} added.");
-    }
-
-    private void OnPlayerStateChanged(Player player, string propertyName)
-    {
-        Console.WriteLine($"Player {player.Name}'s {propertyName} has changed.");
+        else if(e.NewPhase == Phase.NOMINATE)
+        {
+            Nominate();
+        }
+        else if(e.NewPhase == Phase.VOTE)
+        {
+            Vote();
+        }
+        else if(e.NewPhase == Phase.END)
+        {
+            End();
+        }
     }
 
     public void StartClient()
     {
-        var thread = new Thread(DoChat);
+        var thread = new Thread(Start);
         thread.Start();
+    }
+
+    public void Start() 
+    {
+        // TODO: notify the players of their roles.
+        Program.SendTo(clientSocket, new ChatMessage("System", $"You are a {player.Role}"));
+        DoChat();
     }
 
     private void Night()
     {
-        Program.Broadcast(new ChatMessage("System", "Night has fallen."));
+        Program.SendTo(clientSocket, new ChatMessage("System", "Night has fallen."));
         // TODO: send instructions to the appropriate players
         while(true)
         {
@@ -132,7 +146,28 @@ internal class HandleClient
         }
     }
 
-    private void DoChat() 
+    private void Nominate() 
+    {
+        // TODO: notify the players of their roles.
+        Program.SendTo(clientSocket, new ChatMessage("System", $"Nominate"));
+        DoChat();
+    }
+
+    private void Vote() 
+    {
+        // TODO: notify the players of their roles.
+        Program.SendTo(clientSocket, new ChatMessage("System", $"Vote"));
+        DoChat();
+    }
+
+    private void End() 
+    {
+        // TODO: notify the players of their roles.
+        Program.SendTo(clientSocket, new ChatMessage("System", $"End"));
+        DoChat();
+    }
+
+    private void DoChat()
     {
         while(true)
         {
@@ -143,17 +178,18 @@ internal class HandleClient
                 {
                     if(msg.Sender == clientName) 
                     {
+                        Program.Broadcast(msg);
+                        Console.WriteLine($"{clientName} said: {msg.Message}");
                         if(msg.Message == "ready")
                         {
                             Program.Done(msg.Sender);
                         }
-                        Program.Broadcast(msg);
-                        Console.WriteLine($"{clientName} said: {msg.Message}");
                     }
                 }
                 else 
                 {
                     Console.WriteLine($"{clientName} did not get a message because it was ill formed.");
+                    break;
                 }
             }
             catch (Exception ex)
@@ -162,4 +198,5 @@ internal class HandleClient
             }
         }
     }
+
 }

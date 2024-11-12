@@ -55,15 +55,13 @@ public static class Program
 
     public static void Done(string username) // cause username to finish their actions in this phase
     {
-        for(int i=0; i<GameState.PlayerList.Count; i++)
+        foreach (Player p in GameState.PlayerList)
         {
-            if(GameState.PlayerList[i].Name == username)
+            if(p.Name == username)
             {
-                Console.WriteLine("About to finish phase");
-                GameState.PlayerList[i].FinishPhase();
+                p.FinishPhase();
             }
         }
-        Console.WriteLine("finished finishing phase");
     }
 
     public static void SendTo(TcpClient recipient, ChatMessage msg)
