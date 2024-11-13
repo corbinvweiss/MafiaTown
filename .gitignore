@@ -19,6 +19,7 @@
 ####################
 # VS Upgrade stuff #
 ####################
+**/.vscode/*
 _UpgradeReport_Files/
 ###############
 # Directories #
