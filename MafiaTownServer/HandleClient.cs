@@ -36,6 +36,7 @@ internal class HandleClient
             if(e.PropertyName == "CurrentPhase")
             {
                 Console.WriteLine($"Player {clientName} notified of phase change: {gameState.CurrentPhase}.");
+                Program.SendTo(clientSocket, new ChatMessage("System", $"{gameState.CurrentPhase}"));
             }
         }
     }
@@ -52,59 +53,14 @@ internal class HandleClient
         while(true)
         {
             ChatMessage? msg = clientSocket.ReadChatMessage();
-            if(msg?.Message[0] != '!') 
+            if(msg?.Message.Length > 0 && msg?.Message[0] != '!') 
             {
                 DoChat(msg);
             } 
-            if(GameState.CurrentPhase == Phase.NIGHT)
+            else if(msg?.Message.Length > 0 && msg?.Message[0] == '!')
             {
-                Night(msg);
+                HandleCommand(msg);
             }
-            if(GameState.CurrentPhase == Phase.NOMINATE)
-            {
-                Nominate(msg);
-            }
-            if(GameState.CurrentPhase == Phase.VOTE)
-            {
-                Vote(msg);
-            }
-            if(GameState.CurrentPhase == Phase.END)
-            {
-                End(msg);
-            }
-        }
-    }
-
-    private void Night(ChatMessage msg)
-    {
-        Program.SendTo(clientSocket, new ChatMessage("System", "Night has fallen."));
-        // TODO: send instructions to the appropriate players
-        try
-        {
-            if (msg != null)
-            {
-                if(msg.Sender == clientName) 
-                {
-                    if(msg.Message[0] == '!')
-                    {
-                        HandleCommand(msg);
-                    }
-                    if(msg.Message == "ready")
-                    {
-                        player.FinishPhase();
-                    }
-                    Program.Broadcast(msg);
-                    Console.WriteLine($"{clientName} said: {msg.Message}");
-                }
-            }
-            else 
-            {
-                Console.WriteLine($"{clientName} did not get a message because it was ill formed.");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Unexpected Error: {ex.Message}");
         }
     }
 
@@ -138,9 +94,14 @@ internal class HandleClient
         Player target = GetPlayer(parsed[1]);
 
         if(target is not null){
-            if(msg.Message[..5] == "!kill" && sender.Role == Role.MAFIA)
+            if(msg.Message[..5] == "!kill" && sender.Role == Role.MAFIA && GameState.CurrentPhase == Phase.NIGHT)
             {
                 GameState.Target(sender, target);
+                Program.SendTo(sender.Client, new ChatMessage("System", $"You have killed {target.Name}."));
+            }
+            else
+            {
+                Program.SendTo(sender.Client, new ChatMessage("System", $"You can't do that."));
             }
         }
         else {
@@ -149,26 +110,6 @@ internal class HandleClient
         }
     }
 
-    private void Nominate(ChatMessage msg) 
-    {
-        // TODO: notify the players of their roles.
-        Program.SendTo(clientSocket, new ChatMessage("System", $"Nominate"));
-        DoChat(msg);
-    }
-
-    private void Vote(ChatMessage msg) 
-    {
-        // TODO: notify the players of their roles.
-        Program.SendTo(clientSocket, new ChatMessage("System", $"Vote"));
-        DoChat(msg);
-    }
-
-    private void End(ChatMessage msg) 
-    {
-        // TODO: notify the players of their roles.
-        Program.SendTo(clientSocket, new ChatMessage("System", $"End"));
-        DoChat(msg);
-    }
 
     private void DoChat(ChatMessage msg)
     {
