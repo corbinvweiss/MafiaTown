@@ -53,16 +53,6 @@ public static class Program
         }
     }
 
-    public static void Done(string username) // cause username to finish their actions in this phase
-    {
-        foreach (Player p in GameState.PlayerList)
-        {
-            if(p.Name == username)
-            {
-                p.FinishPhase();
-            }
-        }
-    }
 
     public static void SendTo(TcpClient recipient, ChatMessage msg)
     {
