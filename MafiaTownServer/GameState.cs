@@ -9,7 +9,6 @@ public enum Phase // track the phase of the game
 { 
     START,
     NIGHT,
-    NOMINATE,
     VOTE,
     END
 }
@@ -83,6 +82,7 @@ public class GameState  // global synchronized state of the game.
 
     #region Game Phase
     public event PropertyChangedEventHandler? PropertyChanged;    // when the phase changes, trigger an event
+    public string WhatHappened = "";    // describes what happened in the previous phase.
     private Phase _CurrentPhase = Phase.START;
     public Phase CurrentPhase
     {
@@ -111,17 +111,18 @@ public class GameState  // global synchronized state of the game.
         }
         else if(CurrentPhase == Phase.NIGHT)
         {
-            CurrentPhase = Phase.NOMINATE;
-        }
-        else if(CurrentPhase == Phase.NOMINATE)
-        {
-            // TODO: add logic to decide whether to go back to night in case of tie or go on to vote
+            WhatHappened = GetNews();
             CurrentPhase = Phase.VOTE;
         }
         else if(CurrentPhase == Phase.VOTE)
         {
             CurrentPhase = Phase.END;
         }
+    }
+
+    private string GetNews()
+    {
+        return "Some people died, others were healed.";
     }
 
     protected virtual void SetField<T>(out T variable, T value, [CallerMemberName] string propertyName = "")

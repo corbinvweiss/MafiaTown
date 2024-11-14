@@ -35,10 +35,42 @@ internal class HandleClient
         {
             if(e.PropertyName == "CurrentPhase")
             {
+                ChatMessage notify = GetPhaseInstructions();
                 Console.WriteLine($"Player {clientName} notified of phase change: {gameState.CurrentPhase}.");
-                Program.SendTo(clientSocket, new ChatMessage("System", $"{gameState.CurrentPhase}"));
+                Program.SendTo(clientSocket, notify);
             }
         }
+    }
+
+    private ChatMessage GetPhaseInstructions()
+    {
+        string instructions = "";
+        if(GameState.CurrentPhase == Phase.NIGHT)
+        {
+            instructions = "Night has fallen. The mafia will decide who to kill, \n"
+                +"the doctor who to heal, and the sheriff who to investigate. \n"
+                +"The rest of y'all can just chat.\n\n"
+                +"Here are your commands:\n"
+                +"MAFIA: !kill <player>\n"
+                +"DOCTOR: !heal <player>\n"
+                +"SHERIFF: !check <player>\n";
+        }
+        else if(GameState.CurrentPhase == Phase.VOTE)
+        {
+            instructions = "Good morning folks! It's time for the news from the night:\n"
+                + GameState.WhatHappened + "\n"
+                + "Now work together to decide who to vote out of this game.\n\n"
+                + "Here's the command to vote:\n"
+                + "!vote <player>\n";
+        }
+        else if(GameState.CurrentPhase == Phase.END)
+        {
+            instructions = "Welp, that's a wrap. GG to y'all.\n"
+                + GameState.WhatHappened + "\n"
+                + "Feel free to stick around and chat, or just leave\n\n"
+                + "If you can.\n";
+        }
+        return new("System", instructions);
     }
 
     public void StartClient()
