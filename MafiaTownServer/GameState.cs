@@ -107,10 +107,24 @@ public class GameState  // global synchronized state of the game.
         Console.WriteLine("Moving to the next phase");
         if(CurrentPhase == Phase.START)
         {
+            foreach (Player player in PlayerList)
+            {
+                if (player.Role == Role.CIVILIAN)
+                {
+                    player.Done = true;
+                }
+            }
             CurrentPhase = Phase.NIGHT;
         }
         else if(CurrentPhase == Phase.NIGHT)
         {
+            foreach (Player player in PlayerList)
+            {
+                if (player.Targeted == true && player.Healed == false)
+                {
+                    player.Alive = false;
+                }
+            }
             WhatHappened = GetNews();
             CurrentPhase = Phase.VOTE;
         }

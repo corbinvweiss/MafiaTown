@@ -92,17 +92,23 @@ internal class HandleClient
                 return;
             }
         }
+        string command = parsed[0];
         Player target = GetPlayer(parsed[1]);
 
-        if(target is not null){
-            if(msg.Message[..5] == "!kill" && sender.Role == Role.MAFIA && GameState.CurrentPhase == Phase.NIGHT)
+        if(target is not null && sender.Alive == true)
+        {
+            // TODO: Clean up logic
+            if(GameState.CurrentPhase == Phase.NIGHT)
             {
-                GameState.Target(sender, target);
-                Program.SendTo(sender.Client, new ChatMessage("System", $"You have killed {target.Name}."));
+                NightCmds(sender, target, command);
+            }
+            else if (GameState.CurrentPhase == Phase.VOTE && command == "!vote" && target.Alive == true)
+            {
+                GameState.Vote(sender, target);
             }
             else
             {
-                Program.SendTo(sender.Client, new ChatMessage("System", $"You can't do that."));
+                Program.SendTo(sender.Client, new ChatMessage("System", $"You can't use commands right now.")); 
             }
         }
         else {
@@ -111,6 +117,62 @@ internal class HandleClient
         }
     }
 
+    private void NightCmds(Player sender, Player target, string cmd)
+    {
+        // !kill command
+        if (cmd == "!kill")
+        {
+            if (sender.Role == Role.MAFIA && target.Alive == true)
+            {
+                GameState.Target(sender, target);
+                Program.SendTo(sender.Client, new ChatMessage("System", $"You targeted {target.Name}."));
+            }
+            else if (sender.Role == Role.MAFIA && target.Alive == false)
+            {
+                Program.SendTo(sender.Client, new ChatMessage("System", $"Target is already dead."));
+            }
+            else if (sender.Role != Role.MAFIA)
+            {
+                Program.SendTo(sender.Client, new ChatMessage("System", $"You can't do that."));
+            }
+        }
+
+        // !heal command
+        if (cmd == "!heal")
+        {
+            if (sender.Role == Role.DOCTOR && target.Alive == true)
+            {
+                GameState.Heal(sender, target);
+                Program.SendTo(sender.Client, new ChatMessage("System", $"You healed {target.Name}."));
+            }
+            else if (sender.Role == Role.DOCTOR && target.Alive == false)
+            {
+                Program.SendTo(sender.Client, new ChatMessage("System", $"Target is already dead."));
+            }
+            else if (sender.Role != Role.DOCTOR)
+            {
+                Program.SendTo(sender.Client, new ChatMessage("System", $"You can't do that."));
+        }
+        }
+
+        // !check command
+        if (cmd == "!check")
+        {
+            if (sender.Role == Role.SHERIFF && target.Alive == true)
+            {
+                GameState.Investigate(sender);
+                Program.SendTo(sender.Client, new ChatMessage("System", $"You investigated {target.Name}. Their role is {target.Role}."));
+            }
+            else if (sender.Role == Role.SHERIFF && target.Alive == false)
+            {
+                Program.SendTo(sender.Client, new ChatMessage("System", $"Target is dead."));
+            }
+            else if (sender.Role != Role.SHERIFF)
+            {
+                Program.SendTo(sender.Client, new ChatMessage("System", $"You can't do that."));
+            }
+        }
+    }
 
     private void DoChat(ChatMessage msg)
     {
