@@ -111,6 +111,13 @@ public class GameState  // global synchronized state of the game.
         }
         else if(CurrentPhase == Phase.NIGHT)
         {
+            foreach (Player player in PlayerList)
+            {
+                if (player.Targeted == true && player.Healed == false)
+                {
+                    player.Alive = false;
+                }
+            }
             WhatHappened = GetNews();
             CurrentPhase = Phase.VOTE;
         }

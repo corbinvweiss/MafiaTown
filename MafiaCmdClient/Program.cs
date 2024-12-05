@@ -17,6 +17,7 @@ class Program
 
     public async void MainMethod()
     {
+        // TODO: Make restriction on names i.e. NO SPACES
         Name = GetInput("Enter your name: ");
 
         Model = new MainModel();
