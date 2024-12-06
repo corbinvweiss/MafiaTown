@@ -97,7 +97,7 @@ internal class HandleClient
         string command = parsed[0];
         Player target = GetPlayer(parsed[1]);
 
-        if(target is not null && sender.Alive == true)
+        if(target is not null && sender.Alive == true && !sender.Done)
         {
             // TODO: Clean up logic
             if(GameState.CurrentPhase == Phase.NIGHT)
@@ -115,7 +115,18 @@ internal class HandleClient
             }
         }
         else {
+            if(target is null)
+            {
             Program.SendTo(sender.Client, new ChatMessage("System", $"No such player '{parsed[1]}'."));
+            }
+            if(!sender.Alive)
+            {
+                Program.SendTo(sender.Client, new ChatMessage("System", "You can't do that when you're dead."));
+            }
+            if(sender.Done)
+            {
+                Program.SendTo(sender.Client, new ChatMessage("System", "You already did your thing this round."));
+            }
             return;
         }
     }
