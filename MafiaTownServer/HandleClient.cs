@@ -50,7 +50,9 @@ internal class HandleClient
 
     public void Start() 
     {
-        Program.SendTo(clientSocket, new ChatMessage("System", $"You are a {player.Role}"));
+        ChatMessage instructions = new ChatMessage("System", $"You are a {player.Role}. \nYou are in the lobby. " +
+            "Enter 'ready' when you are ready to move to the next phase.");
+        Program.SendTo(clientSocket, instructions);
         while(true)
         {
             ChatMessage? msg = clientSocket.ReadChatMessage();
