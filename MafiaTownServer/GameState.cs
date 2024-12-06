@@ -111,25 +111,30 @@ public class GameState  // global synchronized state of the game.
         }
         else if(CurrentPhase == Phase.NIGHT)
         {
+            string killed = "";
             foreach (Player player in PlayerList)
             {
                 if (player.Targeted == true && player.Healed == false)
                 {
+                    killed = player.Name;
                     player.Alive = false;
                 }
             }
-            WhatHappened = GetNews();
+            if(killed != "")
+            {
+                WhatHappened = $"{killed} was killed. Sorry.";
+            }
+            else
+            {
+                WhatHappened = "No one died!";
+            }
             CurrentPhase = Phase.VOTE;
         }
         else if(CurrentPhase == Phase.VOTE)
         {
+            // TODO: add who won to WhatHappened
             CurrentPhase = Phase.END;
         }
-    }
-
-    private string GetNews()
-    {
-        return "Some people died, others were healed.";
     }
 
     protected virtual void SetField<T>(out T variable, T value, [CallerMemberName] string propertyName = "")
