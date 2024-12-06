@@ -104,6 +104,7 @@ internal class HandleClient
             }
             else if (GameState.CurrentPhase == Phase.VOTE && command == "!vote" && target.Alive == true)
             {
+                Program.SendTo(sender.Client, new ChatMessage("System", $"You voted for {target.Name}."));
                 GameState.Vote(sender, target);
             }
             else
@@ -124,8 +125,8 @@ internal class HandleClient
         {
             if (sender.Role == Role.MAFIA && target.Alive == true)
             {
-                GameState.Target(sender, target);
                 Program.SendTo(sender.Client, new ChatMessage("System", $"You targeted {target.Name}."));
+                GameState.Target(sender, target);
             }
             else if (sender.Role == Role.MAFIA && target.Alive == false)
             {
@@ -142,8 +143,8 @@ internal class HandleClient
         {
             if (sender.Role == Role.DOCTOR && target.Alive == true)
             {
-                GameState.Heal(sender, target);
                 Program.SendTo(sender.Client, new ChatMessage("System", $"You healed {target.Name}."));
+                GameState.Heal(sender, target);
             }
             else if (sender.Role == Role.DOCTOR && target.Alive == false)
             {
