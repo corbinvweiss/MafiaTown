@@ -59,7 +59,8 @@ public static class Program
         string instructions = "";
         if(GameState.CurrentPhase == Phase.NIGHT)
         {
-            instructions = "Night has fallen. The mafia will decide who to kill, \n"
+            instructions = GameState.WhatHappened
+                +"Night has fallen. The mafia will decide who to kill, \n"
                 +"the doctor who to heal, and the sheriff who to investigate. \n"
                 +"The rest of y'all can just chat.\n\n"
                 +"Here are your commands:\n"

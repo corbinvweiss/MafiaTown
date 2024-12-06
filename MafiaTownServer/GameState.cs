@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks.Dataflow;
 
 namespace MafiaTownServer;
 
@@ -120,6 +121,7 @@ public class GameState  // global synchronized state of the game.
                     player.Alive = false;
                 }
             }
+            postPhase();
             if(killed != "")
             {
                 WhatHappened = $"{killed} was killed. Sorry.";
@@ -132,8 +134,60 @@ public class GameState  // global synchronized state of the game.
         }
         else if(CurrentPhase == Phase.VOTE)
         {
-            // TODO: add who won to WhatHappened
+            talleyVotes();
+            postPhase();
+        }
+    }
+
+    private void talleyVotes()
+    {
+        Player votedPlayer = PlayerList[0]; // Assign player at start of list
+        // Find player with greatest votes
+        foreach (Player player in PlayerList)
+        {
+            if (player.VotesAgainst > votedPlayer.VotesAgainst)
+            {
+                votedPlayer = player;
+            }
+        }
+        votedPlayer.Alive = false;
+        // Check for tie
+        foreach (Player player in PlayerList)
+        {
+            if (player != votedPlayer && player.VotesAgainst == votedPlayer.VotesAgainst)
+            {
+                WhatHappened = "There was a tie!\n\n";
+            }
+        }
+    }
+
+    private void postPhase()
+    {
+        int mafia = 0;
+        int nonMafia = 0;
+        foreach (Player player in PlayerList)
+        {
+            if (player.Role == Role.MAFIA && player.Alive == true)
+            {
+                mafia++;
+            } else
+            {
+                nonMafia++;
+            }
+        }
+        if (mafia == 0 || nonMafia == 0)
+        {
             CurrentPhase = Phase.END;
+        } else
+        {
+            if (CurrentPhase == Phase.NIGHT)
+            {
+                CurrentPhase = Phase.VOTE;
+            }
+            else //if (CurrentPhase == Phase.VOTE)
+            {
+                CurrentPhase = Phase.NIGHT;
+            }
         }
     }
 
