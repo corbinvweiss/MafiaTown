@@ -150,14 +150,20 @@ public class GameState  // global synchronized state of the game.
                 votedPlayer = player;
             }
         }
-        votedPlayer.Alive = false;
         // Check for tie
+        bool tie = false;
         foreach (Player player in PlayerList)
         {
             if (player != votedPlayer && player.VotesAgainst == votedPlayer.VotesAgainst)
             {
                 WhatHappened = "There was a tie!\n\n";
+                tie = true;
+                break;
             }
+        }
+        if (!tie)
+        {
+            votedPlayer.Alive = false;
         }
     }
 
