@@ -99,7 +99,10 @@ public class GameState  // global synchronized state of the game.
     {
         foreach (Player player in PlayerList)
         {
-            player.StartPhase();
+            if(player.Alive)
+            {
+                player.StartPhase();
+            }
         }
     }
 
