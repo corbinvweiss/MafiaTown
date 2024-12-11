@@ -80,6 +80,23 @@ internal class HandleClient
         return p;
     }
 
+    private bool Validate(string command)
+    {
+        // check if command is one of the four possible commands:
+        // kill, heal, check, vote
+        bool valid = false;
+        string[] commands = ["!kill", "!heal", "!check", "!vote"];
+        foreach(string cmd in commands)
+        { 
+            if(command == cmd)
+            {
+                valid = true;
+                break;
+            }
+        }
+        return valid;
+    }
+
     // handle a command such as !kill or !heal or !vote or !check
     private void HandleCommand(ChatMessage msg)
     {
@@ -95,6 +112,10 @@ internal class HandleClient
             }
         }
         string command = parsed[0];
+        if(!Validate(command))
+        {
+            Program.SendTo(sender.Client, new ChatMessage("System", $"'{command}' is not a valid action."));
+        }
         Player target = GetPlayer(parsed[1]);
 
         if(target is not null && sender.Alive == true && !sender.Done)
@@ -104,10 +125,17 @@ internal class HandleClient
             {
                 NightCmds(sender, target, command);
             }
-            else if (GameState.CurrentPhase == Phase.VOTE && command == "!vote" && target.Alive == true)
+            else if (GameState.CurrentPhase == Phase.VOTE && command == "!vote")
             {
-                Program.SendTo(sender.Client, new ChatMessage("System", $"You voted for {target.Name}."));
-                GameState.Vote(sender, target);
+                if(target.Alive == true)
+                {
+                    Program.SendTo(sender.Client, new ChatMessage("System", $"You voted for {target.Name}."));
+                    GameState.Vote(sender, target);
+                }
+                else 
+                {
+                    Program.SendTo(sender.Client, new ChatMessage("System", $"{target.Name} is already dead. Try again."));
+                }
             }
             else
             {
@@ -119,11 +147,11 @@ internal class HandleClient
             {
             Program.SendTo(sender.Client, new ChatMessage("System", $"No such player '{parsed[1]}'."));
             }
-            if(!sender.Alive)
+            else if(!sender.Alive)
             {
                 Program.SendTo(sender.Client, new ChatMessage("System", "You can't do that when you're dead."));
             }
-            if(sender.Done)
+            else if(sender.Done)
             {
                 Program.SendTo(sender.Client, new ChatMessage("System", "You already did your thing this round."));
             }
@@ -133,6 +161,10 @@ internal class HandleClient
 
     private void NightCmds(Player sender, Player target, string cmd)
     {
+        if (cmd == "!vote")
+        {
+            Program.SendTo(sender.Client, new ChatMessage("System", $"You can't vote right now."));
+        }
         // !kill command
         if (cmd == "!kill")
         {
