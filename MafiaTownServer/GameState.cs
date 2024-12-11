@@ -124,7 +124,6 @@ public class GameState  // global synchronized state of the game.
                     player.Alive = false;
                 }
             }
-            postPhase();
             if(killed != "")
             {
                 WhatHappened = $"{killed} was killed. Sorry.";
@@ -133,7 +132,7 @@ public class GameState  // global synchronized state of the game.
             {
                 WhatHappened = "No one died!";
             }
-            CurrentPhase = Phase.VOTE;
+            postPhase();
         }
         else if(CurrentPhase == Phase.VOTE)
         {
@@ -159,35 +158,45 @@ public class GameState  // global synchronized state of the game.
         {
             if (player != votedPlayer && player.VotesAgainst == votedPlayer.VotesAgainst)
             {
-                WhatHappened = "There was a tie!\n\n";
+                WhatHappened = "The vote ended in a tie!\n\n";
                 tie = true;
                 break;
             }
         }
         if (!tie)
         {
+            WhatHappened = $"{votedPlayer.Name} has been voted out. boohoo.\n";
             votedPlayer.Alive = false;
         }
     }
 
+    // check for win conditions after night and after voting.
     private void postPhase()
     {
         int mafia = 0;
         int nonMafia = 0;
         foreach (Player player in PlayerList)
         {
-            if (player.Role == Role.MAFIA && player.Alive == true)
+            if (player.Role == Role.MAFIA && player.Alive)
             {
                 mafia++;
-            } else
+            } 
+            else if (player.Role != Role.MAFIA && player.Alive)
             {
                 nonMafia++;
             }
         }
-        if (mafia == 0 || nonMafia == 0)
+        if (mafia == 0)
         {
+            WhatHappened = "Civilians Win!!";
             CurrentPhase = Phase.END;
-        } else
+        } 
+        else if (nonMafia == 0)
+        {
+            WhatHappened = "Mafia Wins!";
+            CurrentPhase = Phase.END;
+        }
+        else
         {
             if (CurrentPhase == Phase.NIGHT)
             {
