@@ -158,14 +158,14 @@ public class GameState  // global synchronized state of the game.
         {
             if (player != votedPlayer && player.VotesAgainst == votedPlayer.VotesAgainst)
             {
-                WhatHappened = "The vote ended in a tie!\n\n";
+                WhatHappened = "The vote ended in a tie!";
                 tie = true;
                 break;
             }
         }
         if (!tie)
         {
-            WhatHappened = $"{votedPlayer.Name} has been voted out. boohoo.\n";
+            WhatHappened = $"{votedPlayer.Name} has been voted out. boohoo.";
             votedPlayer.Alive = false;
         }
     }
@@ -188,12 +188,12 @@ public class GameState  // global synchronized state of the game.
         }
         if (mafia == 0)
         {
-            WhatHappened = "Civilians Win!!";
+            WhatHappened += " Civilians Win!!";
             CurrentPhase = Phase.END;
         } 
         else if (nonMafia == 0)
         {
-            WhatHappened = "Mafia Wins!";
+            WhatHappened += " Mafia Wins!";
             CurrentPhase = Phase.END;
         }
         else

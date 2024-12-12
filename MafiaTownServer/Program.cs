@@ -59,7 +59,7 @@ public static class Program
         string instructions = "";
         if(GameState.CurrentPhase == Phase.NIGHT)
         {
-            instructions = GameState.WhatHappened
+            instructions = GameState.WhatHappened + "\n"
                 +"Night has fallen. The mafia will decide who to kill, \n"
                 +"the doctor who to heal, and the sheriff who to investigate. \n"
                 +"The rest of y'all can just chat.\n\n"
@@ -78,8 +78,8 @@ public static class Program
         }
         else if(GameState.CurrentPhase == Phase.END)
         {
-            instructions = "Welp, that's a wrap. GG to y'all.\n"
-                + GameState.WhatHappened + "\n"
+            instructions = GameState.WhatHappened + "\n"
+                + "Welp, that's a wrap. GG to y'all.\n"
                 + "Feel free to stick around and chat, or just leave\n\n"
                 + "If you can.\n";
         }
